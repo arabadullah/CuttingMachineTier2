@@ -1,11 +1,5 @@
 package gtPlusPlus.xmod.gregtech.common.tileentities.machines.multi.processing;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
@@ -20,12 +14,17 @@ import static gregtech.api.enums.GT_HatchElement.InputHatch;
 import static gregtech.api.enums.GT_HatchElement.Maintenance;
 import static gregtech.api.enums.GT_HatchElement.Muffler;
 import static gregtech.api.enums.GT_HatchElement.OutputBus;
+
+import gregtech.api.enums.Materials;
+import gregtech.api.enums.MaterialsUEVplus;
 import gregtech.api.enums.TAE;
 import gregtech.api.gui.modularui.GT_UITextures;
 import gregtech.api.interfaces.IIconContainer;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.logic.ProcessingLogic;
+import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_Hatch;
+import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_Hatch_Input;
 import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMaps;
 import gregtech.api.util.GT_Multiblock_Tooltip_Builder;
@@ -36,24 +35,25 @@ import gtPlusPlus.core.lib.CORE;
 import gtPlusPlus.core.util.minecraft.PlayerUtils;
 import gtPlusPlus.xmod.gregtech.api.metatileentity.implementations.base.GregtechMeta_MultiBlockBase;
 import gtPlusPlus.xmod.gregtech.common.blocks.textures.TexturesGtBlock;
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.FluidStack;
+
+import java.lang.Math.max;
+import java.lang.Math.exp;
 
 public class GregtechMetaTileEntity_Adv_CuttingMachine extends
     GregtechMeta_MultiBlockBase<GregtechMetaTileEntity_Adv_CuttingMachine> implements ISurvivalConstructable {
 
     private int mCasing;
-    private static final int MACHINEMODE_CUTTER = 0;
+    private boolean MACHINE_MODE_PLASMA = false;
+    private boolean MACHINE_MODE_SPATIAL = false;
+    private int currentParallels;
+    private float currentSpeedBonusDenominator = 350.0f;
+    private int currentPlasmaConsumption = 0;
 
     private static IStructureDefinition<GregtechMetaTileEntity_Adv_CuttingMachine> STRUCTURE_DEFINITION = null;
 
@@ -80,10 +80,11 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
     protected GT_Multiblock_Tooltip_Builder createTooltip() {
         GT_Multiblock_Tooltip_Builder tt = new GT_Multiblock_Tooltip_Builder();
         tt.addMachineType(getMachineType())
-            .addInfo("Controller Block for the Industrial Cutting Factory")
-            .addInfo("200% faster than using single block machines of the same voltage")
-            .addInfo("Only uses 75% of the EU/t normally required")
-            .addInfo("Processes four items per voltage tier")
+            .addInfo("Controller Block for the Bonesaw")
+            .addInfo("250% faster than using single block machines of the same voltage.")
+            .addInfo("Uses 66.6% of the EU/t normally required.")
+            .addInfo("Processes five* items per voltage tier.")
+            .addInfo("*Max parallels can vary greatly. It Hungers.")
             .addPollutionAmount(getPollutionPerSecond(null))
             .addSeparator()
             .beginStructureBlock(3, 3, 5, true)
@@ -157,12 +158,6 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
         return RecipeMaps.cutterRecipes;
     }
 
-    @Nonnull
-    @Override
-    public Collection<RecipeMap<?>> getAvailableRecipeMaps() {
-        return Arrays.asList(RecipeMaps.cutterRecipes);
-    }
-
     @Override
     public int getRecipeCatalystPriority() {
         return -1;
@@ -170,14 +165,115 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
 
     @Override
     protected ProcessingLogic createProcessingLogic() {
-        return new ProcessingLogic().setSpeedBonus(1F / 3F)
-            .setEuModifier(0.75F)
-            .setMaxParallelSupplier(this::getMaxParallelRecipes);
+        return new ProcessingLogic().setSpeedBonus(100.0f / this.currentSpeedBonusDenominator)
+            .setEuModifier(0.666F)
+            .setMaxParallelSupplier(this::getCurrentParallels);
     }
 
-    @Override
-    public int getMaxParallelRecipes() {
-        return (5 * GT_Utility.getTier(this.getMaxInputVoltage()));
+    public int getBaseParallelRecipes() {
+        return (6 * GT_Utility.getTier(this.getMaxInputVoltage()));
+    }
+
+    public int getCurrentParallels() {
+        //return this.getBaseParallelRecipes() * (int) Math.round(spatiallyEnlargedConsumptionFormula());
+        return this.currentParallels;
+    }
+
+    public double spatiallyEnlargedConsumptionFormula() {
+        // parameters for the efficiency curve
+        // insert desmos link here
+        // Could have rescaled the x-axis to be from 0-1
+        // But I'm lazy so it stays as 0-8
+        int x_axis_scaling_factor = 8;
+        final float a = 2.65f;
+        final float b1 = 0.8f;
+        final float b2 = 0.2f;
+        final float c = 4.0f;
+        final float d = 0.8f;
+
+        int stored_spatial = this.getFluidAndDrain(MaterialsUEVplus.Space.getFluid(0L));
+        int hatch_capacity = this.getMaxCapacityOfAFluid(MaterialsUEVplus.Space.getFluid(0L));
+        float percent_filled_factor = x_axis_scaling_factor * (float) stored_spatial / hatch_capacity;
+
+
+        float fill_parallel_boost;
+        if (percent_filled_factor <= 4) {
+            fill_parallel_boost = logisticFunction(a,b1,c,d,percent_filled_factor) ;
+        }
+        else {
+            fill_parallel_boost = logisticFunction(a,b2,c,d,percent_filled_factor);
+        }
+        // Multiplier for what tier Input Hatch(es) used for spatially enlarged fluid
+        // I'm told spatially enlarged becomes free with T7 eoh so lets just balance it around LuV input hatches for now
+        double hatch_tier_parallel_boost = Math.pow( Math.log(hatch_capacity / 512_000.0d+1) / Math.log(2.0d), 1.0f / 4 );
+
+        return fill_parallel_boost * hatch_tier_parallel_boost;
+    }
+
+    private int getFluidAndDrain(FluidStack fluid) {
+        int amount = 0;
+        for (GT_MetaTileEntity_Hatch_Input fluid_hatch : this.mInputHatches) {
+            if (fluid_hatch.getFluid().getFluid() == fluid.getFluid() && fluid_hatch.drain(fluid_hatch.getFluidAmount(), false).amount == fluid_hatch.mFluid.amount) {
+                amount += fluid_hatch.getFluidAmount();
+                this.drainInputHatch(fluid_hatch);
+            }
+        }
+        return amount;
+    }
+
+    private int getFluidAmount(FluidStack fluid) {
+        int amount = 0;
+        for (GT_MetaTileEntity_Hatch_Input fluid_hatch : this.mInputHatches) {
+            if (fluid_hatch.getFluid().getFluid() == fluid.getFluid()) {
+                amount += fluid_hatch.getCapacity();
+            }
+        }
+        return amount;
+    }
+
+    private void drainInputHatch(GT_MetaTileEntity_Hatch_Input input_hatch) {
+        input_hatch.drain(input_hatch.getFluidAmount(), true);
+    }
+
+    private int getMaxCapacityOfAFluid(FluidStack fluid) {
+        int hatch_capacity = 0;
+        for (GT_MetaTileEntity_Hatch_Input fluid_hatch : this.mInputHatches) {
+            if (fluid_hatch.getFluid().getFluid() == MaterialsUEVplus.Space.mFluid) {
+                int amount = fluid_hatch.getCapacity();
+                hatch_capacity += amount;
+            }
+        }
+        return hatch_capacity;
+    }
+
+    private void doPlasmaConsumption() {
+        int output;
+        // subtracting by 350 to make minimum speed bonus not require plasma
+        // takes the speed bonus that stacks on the base in liters of plasma every half a second
+        int plasmaConsumption = (int) (this.currentSpeedBonusDenominator - 350f);
+        int amount_drained = this.getFluidAndDrain(Materials.Thorium.getPlasma(1));
+        if (this.maxProgresstime() != 0 && amount_drained > 0) {
+
+            this.currentSpeedBonusDenominator = Math.min(2000f, this.currentSpeedBonusDenominator + 25f);
+        }
+        else {
+            this.currentSpeedBonusDenominator = Math.max(350f, this.currentSpeedBonusDenominator - 3.125f);
+        }
+
+    }
+
+    public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTick) {
+        if (this.MACHINE_MODE_SPATIAL && aTick % 100 == 0) {
+            this.currentParallels = (int) Math.round(this.getBaseParallelRecipes() * this.spatiallyEnlargedConsumptionFormula());
+        }
+        if (this.MACHINE_MODE_PLASMA && aTick % 10 == 0) {
+            this.doPlasmaConsumption();
+        }
+        super.onPostTick(aBaseMetaTileEntity, aTick);
+    }
+
+    public float logisticFunction(float a, float b, float c, float d, float x) {
+        return (float) (a / (1 + Math.exp(-1 * b * (x - c))) + d);
     }
 
     @Override
@@ -237,31 +333,31 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
         return StatCollector.translateToLocal("GT5U.GTPP_MULTI_ADV_CUTTING_MACHINE");
     }
 
-    @Override
-    public void loadNBTData(NBTTagCompound aNBT) {
-        // Migrates old NBT tag to the new one
-        if (aNBT.hasKey("mCuttingMode")) {
-            machineMode = aNBT.getBoolean("mCuttingMode") ? MACHINEMODE_CUTTER : MACHINEMODE_SLICER;
-        }
-        super.loadNBTData(aNBT);
-    }
+//    @Override
+//    public void loadNBTData(NBTTagCompound aNBT) {
+//        // Migrates old NBT tag to the new one
+//        if (aNBT.hasKey("mCuttingMode")) {
+//            machineMode = aNBT.getBoolean("mCuttingMode") ? MACHINEMODE_CUTTER : MACHINEMODE_SLICER;
+//        }
+//        super.loadNBTData(aNBT);
+//    }
 
-    @Override
-    public void getWailaNBTData(EntityPlayerMP player, TileEntity tile, NBTTagCompound tag, World world, int x, int y,
-        int z) {
-        super.getWailaNBTData(player, tile, tag, world, x, y, z);
-        tag.setInteger("mode", machineMode);
-    }
-
-    @Override
-    public void getWailaBody(ItemStack itemStack, List<String> currentTip, IWailaDataAccessor accessor,
-        IWailaConfigHandler config) {
-        super.getWailaBody(itemStack, currentTip, accessor, config);
-        final NBTTagCompound tag = accessor.getNBTData();
-        currentTip.add(
-            StatCollector.translateToLocal("GT5U.machines.oreprocessor1") + " "
-                + EnumChatFormatting.WHITE
-                + StatCollector.translateToLocal("GT5U.GTPP_MULTI_CUTTING_MACHINE.mode." + tag.getInteger("mode"))
-                + EnumChatFormatting.RESET);
-    }
+//    @Override
+//    public void getWailaNBTData(EntityPlayerMP player, TileEntity tile, NBTTagCompound tag, World world, int x, int y,
+//        int z) {
+//        super.getWailaNBTData(player, tile, tag, world, x, y, z);
+//        tag.setInteger("mode", machineMode);
+//    }
+//
+//    @Override
+//    public void getWailaBody(ItemStack itemStack, List<String> currentTip, IWailaDataAccessor accessor,
+//        IWailaConfigHandler config) {
+//        super.getWailaBody(itemStack, currentTip, accessor, config);
+//        final NBTTagCompound tag = accessor.getNBTData();
+//        currentTip.add(
+//            StatCollector.translateToLocal("GT5U.machines.oreprocessor1") + " "
+//                + EnumChatFormatting.WHITE
+//                + StatCollector.translateToLocal("GT5U.GTPP_MULTI_CUTTING_MACHINE.mode." + tag.getInteger("mode"))
+//                + EnumChatFormatting.RESET);
+//    }
 }
