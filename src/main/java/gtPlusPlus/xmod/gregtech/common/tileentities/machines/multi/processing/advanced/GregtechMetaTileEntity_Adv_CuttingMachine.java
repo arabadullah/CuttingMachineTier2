@@ -175,7 +175,6 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
     }
 
     public int getCurrentParallels() {
-        //return this.getBaseParallelRecipes() * (int) Math.round(spatiallyEnlargedConsumptionFormula());
         return this.currentParallels;
     }
 
@@ -250,16 +249,16 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
         int output;
         // subtracting by 350 to make minimum speed bonus not require plasma
         // takes the speed bonus that stacks on the base in liters of plasma every half a second
-        int plasmaConsumption = (int) (this.currentSpeedBonusDenominator - 350f);
+        this.currentPlasmaConsumption = (int) (this.currentSpeedBonusDenominator - 350f);
         int amount_drained = this.getFluidAndDrain(Materials.Thorium.getPlasma(1));
-        if (this.maxProgresstime() != 0 && amount_drained > 0) {
 
+        // allow a 10% margin of error on the optimal plasma consumption
+        if (this.maxProgresstime() != 0 && Math.abs(amount_drained - this.currentPlasmaConsumption) < 0.1f * this.currentPlasmaConsumption) {
             this.currentSpeedBonusDenominator = Math.min(2000f, this.currentSpeedBonusDenominator + 25f);
         }
-        else {
+        else if (this.maxProgresstime() == 0 || (amount_drained - this.currentPlasmaConsumption) < -0.1f * this.currentPlasmaConsumption){
             this.currentSpeedBonusDenominator = Math.max(350f, this.currentSpeedBonusDenominator - 3.125f);
         }
-
     }
 
     public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTick) {
