@@ -42,8 +42,7 @@ import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
 
-import java.lang.Math.max;
-import java.lang.Math.exp;
+import java.lang.Math;
 
 public class GregtechMetaTileEntity_Adv_CuttingMachine extends
     GregtechMeta_MultiBlockBase<GregtechMetaTileEntity_Adv_CuttingMachine> implements ISurvivalConstructable {
@@ -178,6 +177,11 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
         return this.currentParallels;
     }
 
+    @Override
+    public int getMaxParallelRecipes() {
+        return this.currentParallels;
+    }
+
     public double spatiallyEnlargedConsumptionFormula() {
         // parameters for the efficiency curve
         // insert desmos link here
@@ -253,12 +257,14 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
         int amount_drained = this.getFluidAndDrain(Materials.Thorium.getPlasma(1));
 
         // allow a 10% margin of error on the optimal plasma consumption
-        if (this.maxProgresstime() != 0 && Math.abs(amount_drained - this.currentPlasmaConsumption) < 0.1f * this.currentPlasmaConsumption) {
+        if (this.maxProgresstime() != 0 && Math.abs(amount_drained - this.currentPlasmaConsumption) <= 0.1f * this.currentPlasmaConsumption) {
             this.currentSpeedBonusDenominator = Math.min(2000f, this.currentSpeedBonusDenominator + 25f);
         }
+        // no current recipe or plasma consumed less than 90% of needed
         else if (this.maxProgresstime() == 0 || (amount_drained - this.currentPlasmaConsumption) < -0.1f * this.currentPlasmaConsumption){
             this.currentSpeedBonusDenominator = Math.max(350f, this.currentSpeedBonusDenominator - 3.125f);
         }
+        // if plasma consumption is over 110% of needed just do nothing, keep it heated just don't increase or decrease
     }
 
     public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTick) {
