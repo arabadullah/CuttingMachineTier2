@@ -1,4 +1,4 @@
-package gtPlusPlus.xmod.gregtech.common.tileentities.machines.multi.processing;
+package gregtech.common.tileentities.machines.multi;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
@@ -23,7 +23,6 @@ import gregtech.api.interfaces.IIconContainer;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.logic.ProcessingLogic;
-import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_Hatch;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_Hatch_Input;
 import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMaps;
@@ -44,8 +43,8 @@ import net.minecraftforge.fluids.FluidStack;
 
 import java.lang.Math;
 
-public class GregtechMetaTileEntity_Adv_CuttingMachine extends
-    GregtechMeta_MultiBlockBase<GregtechMetaTileEntity_Adv_CuttingMachine> implements ISurvivalConstructable {
+public class GT_MetaTileEntity_Bonesaw extends
+    GregtechMeta_MultiBlockBase<GT_MetaTileEntity_Bonesaw> implements ISurvivalConstructable {
 
     private int mCasing;
     private boolean MACHINE_MODE_PLASMA = false;
@@ -54,20 +53,20 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
     private float currentSpeedBonusDenominator = 350.0f;
     private int currentPlasmaConsumption = 0;
 
-    private static IStructureDefinition<GregtechMetaTileEntity_Adv_CuttingMachine> STRUCTURE_DEFINITION = null;
+    private static IStructureDefinition<GT_MetaTileEntity_Bonesaw> STRUCTURE_DEFINITION = null;
 
-    public GregtechMetaTileEntity_Adv_CuttingMachine(final int aID, final String aName,
-        final String aNameRegional) {
+    public GT_MetaTileEntity_Bonesaw(final int aID, final String aName,
+                                     final String aNameRegional) {
         super(aID, aName, aNameRegional);
     }
 
-    public GregtechMetaTileEntity_Adv_CuttingMachine(final String aName) {
+    public GT_MetaTileEntity_Bonesaw(final String aName) {
         super(aName);
     }
 
     @Override
     public IMetaTileEntity newMetaEntity(final IGregTechTileEntity aTileEntity) {
-        return new GregtechMetaTileEntity_Adv_CuttingMachine(this.mName);
+        return new GT_MetaTileEntity_Bonesaw(this.mName);
     }
 
     @Override
@@ -100,9 +99,9 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
     }
 
     @Override
-    public IStructureDefinition<GregtechMetaTileEntity_Adv_CuttingMachine> getStructureDefinition() {
+    public IStructureDefinition<GT_MetaTileEntity_Bonesaw> getStructureDefinition() {
         if (STRUCTURE_DEFINITION == null) {
-            STRUCTURE_DEFINITION = StructureDefinition.<GregtechMetaTileEntity_Adv_CuttingMachine>builder()
+            STRUCTURE_DEFINITION = StructureDefinition.<GT_MetaTileEntity_Bonesaw>builder()
                 .addShape(
                     mName,
                     transpose(
@@ -110,7 +109,7 @@ public class GregtechMetaTileEntity_Adv_CuttingMachine extends
                             { "CCC", "CCC", "CCC", "CCC", "CCC" }, }))
                 .addElement(
                     'C',
-                    buildHatchAdder(GregtechMetaTileEntity_Adv_CuttingMachine.class)
+                    buildHatchAdder(GT_MetaTileEntity_Bonesaw.class)
                         .atLeast(InputBus, InputHatch, OutputBus, Maintenance, Energy, Muffler)
                         .casingIndex(getCasingTextureIndex())
                         .dot(1)
