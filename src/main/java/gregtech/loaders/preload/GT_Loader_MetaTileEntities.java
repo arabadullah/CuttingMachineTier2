@@ -59,6 +59,7 @@ import static gregtech.api.enums.MetaTileEntityIDs.BATTERY_CHARGER_4_BY_4_UHV;
 import static gregtech.api.enums.MetaTileEntityIDs.BATTERY_CHARGER_4_BY_4_ULV;
 import static gregtech.api.enums.MetaTileEntityIDs.BATTERY_CHARGER_4_BY_4_UV;
 import static gregtech.api.enums.MetaTileEntityIDs.BATTERY_CHARGER_4_BY_4_ZPM;
+import static gregtech.api.enums.MetaTileEntityIDs.BONESAW_CONTROLLER;
 import static gregtech.api.enums.MetaTileEntityIDs.BREWERY_EV;
 import static gregtech.api.enums.MetaTileEntityIDs.BREWERY_HV;
 import static gregtech.api.enums.MetaTileEntityIDs.BREWERY_IV;
@@ -475,6 +476,7 @@ import static gregtech.api.enums.MetaTileEntityIDs.transformer_ZPM_LuV;
 import static gregtech.api.enums.Mods.Forestry;
 import static gregtech.api.enums.Mods.NewHorizonsCoreMod;
 
+import gtPlusPlus.xmod.gregtech.common.tileentities.machines.multi.processing.GT_MetaTileEntity_Bonesaw;
 import net.minecraft.util.EnumChatFormatting;
 
 import gregtech.GT_Mod;
@@ -556,6 +558,7 @@ import gregtech.common.tileentities.machines.basic.GT_MetaTileEntity_Teleporter;
 import gregtech.common.tileentities.machines.long_distance.GT_MetaTileEntity_LongDistancePipelineFluid;
 import gregtech.common.tileentities.machines.long_distance.GT_MetaTileEntity_LongDistancePipelineItem;
 import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_AssemblyLine;
+import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_Bonesaw;
 import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_BrickedBlastFurnace;
 import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_Charcoal_Pit;
 import gregtech.common.tileentities.machines.multi.GT_MetaTileEntity_Cleanroom;
@@ -1148,6 +1151,12 @@ public class GT_Loader_MetaTileEntities implements Runnable { // TODO CHECK CIRC
                 MULTI_LATHE_CONTROLLER.ID,
                 "multimachine.lathe",
                 "Industrial Precision Lathe").getStackForm(1));
+
+        ItemList.Machine_Multi_Bonesaw.set(
+            new GT_MetaTileEntity_Bonesaw(
+                BONESAW_CONTROLLER.ID,
+                "multimachine.bonesaw",
+                "Bonesaw").getStackForm(1));
     }
 
     private static void registerSteamMachines() {
