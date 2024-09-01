@@ -27,7 +27,6 @@ import gregtech.api.enums.Materials;
 import gregtech.api.enums.MaterialsUEVplus;
 import gregtech.api.enums.TAE;
 import gregtech.api.gui.modularui.GT_UITextures;
-import gregtech.api.interfaces.IIconContainer;
 import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
@@ -41,7 +40,6 @@ import gregtech.api.util.GT_Utility;
 import gtPlusPlus.core.block.ModBlocks;
 import gtPlusPlus.core.lib.CORE;
 import gtPlusPlus.core.util.minecraft.PlayerUtils;
-import gtPlusPlus.xmod.gregtech.common.blocks.textures.TexturesGtBlock;
 
 public class GT_MetaTileEntity_Bonesaw extends GT_MetaTileEntity_ExtendedPowerMultiBlockBase<GT_MetaTileEntity_Bonesaw>
     implements ISurvivalConstructable {
@@ -68,7 +66,6 @@ public class GT_MetaTileEntity_Bonesaw extends GT_MetaTileEntity_ExtendedPowerMu
         return new GT_MetaTileEntity_Bonesaw(this.mName);
     }
 
-    @Override
     public String getMachineType() {
         return "Cutting Machine";
     }
@@ -135,20 +132,20 @@ public class GT_MetaTileEntity_Bonesaw extends GT_MetaTileEntity_ExtendedPowerMu
         return checkPiece(mName, 1, 1, 0) && mCasing >= 14;
     }
 
-    @Override
-    protected IIconContainer getActiveOverlay() {
-        return TexturesGtBlock.Overlay_Machine_Controller_Default_Active;
-    }
-
-    @Override
-    protected IIconContainer getInactiveOverlay() {
-        return TexturesGtBlock.Overlay_Machine_Controller_Default;
-    }
-
-    @Override
-    protected int getCasingTextureId() {
-        return TAE.GTPP_INDEX(29);
-    }
+    // @Override
+    // protected IIconContainer getActiveOverlay() {
+    // return TexturesGtBlock.Overlay_Machine_Controller_Default_Active;
+    // }
+    //
+    // @Override
+    // protected IIconContainer getInactiveOverlay() {
+    // return TexturesGtBlock.Overlay_Machine_Controller_Default;
+    // }
+    //
+    // @Override
+    // protected int getCasingTextureId() {
+    // return TAE.GTPP_INDEX(29);
+    // }
 
     @Override
     public RecipeMap<?> getRecipeMap() {
@@ -175,7 +172,6 @@ public class GT_MetaTileEntity_Bonesaw extends GT_MetaTileEntity_ExtendedPowerMu
         return this.currentParallels;
     }
 
-    @Override
     public int getMaxParallelRecipes() {
         return this.currentParallels;
     }
@@ -289,7 +285,7 @@ public class GT_MetaTileEntity_Bonesaw extends GT_MetaTileEntity_ExtendedPowerMu
 
     @Override
     public boolean isCorrectMachinePart(ItemStack aStack) {
-        return false;
+        return true;
     }
 
     public float logisticFunction(float a, float b, float c, float d, float x) {
@@ -339,7 +335,7 @@ public class GT_MetaTileEntity_Bonesaw extends GT_MetaTileEntity_ExtendedPowerMu
     }
 
     @Override
-    public void onModeChangeByScrewdriver(ForgeDirection side, EntityPlayer aPlayer, float aX, float aY, float aZ) {
+    public void onScrewdriverRightClick(ForgeDirection side, EntityPlayer aPlayer, float aX, float aY, float aZ) {
         setMachineMode(nextMachineMode());
         PlayerUtils.messagePlayer(
             aPlayer,
