@@ -590,31 +590,6 @@ public class MaterialsUEVplus {
         1,
         Dyes._NULL);
 
-    public static Materials ProteanGrease = new Materials(
-        144,
-        TextureSet.SET_FLUID,
-        1.0F,
-            0,
-            2,
-            16,
-            90,
-            106,
-            209,
-            0,
-            "ProteanGrease",
-            "Protean Grease",
-            -1,
-            -1,
-            0,
-            1,
-            false,
-            false,
-            1,
-            1,
-            1,
-            Dyes._NULL).setProcessingMaterialTierEU(TierEU.RECIPE_UIV);
-    )
-
     /**
      * called by Materials. Can be safely called multiple times. exists to allow Materials ensure this class is
      * initialized
