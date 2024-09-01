@@ -476,7 +476,6 @@ import static gregtech.api.enums.MetaTileEntityIDs.transformer_ZPM_LuV;
 import static gregtech.api.enums.Mods.Forestry;
 import static gregtech.api.enums.Mods.NewHorizonsCoreMod;
 
-import gtPlusPlus.xmod.gregtech.common.tileentities.machines.multi.processing.GT_MetaTileEntity_Bonesaw;
 import net.minecraft.util.EnumChatFormatting;
 
 import gregtech.GT_Mod;
@@ -1153,10 +1152,7 @@ public class GT_Loader_MetaTileEntities implements Runnable { // TODO CHECK CIRC
                 "Industrial Precision Lathe").getStackForm(1));
 
         ItemList.Machine_Multi_Bonesaw.set(
-            new GT_MetaTileEntity_Bonesaw(
-                BONESAW_CONTROLLER.ID,
-                "multimachine.bonesaw",
-                "Bonesaw").getStackForm(1));
+            new GT_MetaTileEntity_Bonesaw(BONESAW_CONTROLLER.ID, "multimachine.bonesaw", "Bonesaw").getStackForm(1));
     }
 
     private static void registerSteamMachines() {

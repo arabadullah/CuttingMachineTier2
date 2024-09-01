@@ -1,19 +1,27 @@
 package gregtech.common.tileentities.machines.multi;
 
-import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
-import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
-import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
-import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.onElementPass;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.transpose;
-
 import static gregtech.api.enums.GT_HatchElement.Energy;
 import static gregtech.api.enums.GT_HatchElement.InputBus;
 import static gregtech.api.enums.GT_HatchElement.InputHatch;
 import static gregtech.api.enums.GT_HatchElement.Maintenance;
 import static gregtech.api.enums.GT_HatchElement.Muffler;
 import static gregtech.api.enums.GT_HatchElement.OutputBus;
+import static gregtech.api.util.GT_StructureUtility.buildHatchAdder;
+
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.StatCollector;
+import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.FluidStack;
+
+import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
+import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
+import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
+import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
 import gregtech.api.enums.Materials;
 import gregtech.api.enums.MaterialsUEVplus;
@@ -29,24 +37,14 @@ import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_Hatch_Input
 import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMaps;
 import gregtech.api.util.GT_Multiblock_Tooltip_Builder;
-import static gregtech.api.util.GT_StructureUtility.buildHatchAdder;
 import gregtech.api.util.GT_Utility;
 import gtPlusPlus.core.block.ModBlocks;
 import gtPlusPlus.core.lib.CORE;
 import gtPlusPlus.core.util.minecraft.PlayerUtils;
-import gtPlusPlus.xmod.gregtech.api.metatileentity.implementations.base.GregtechMeta_MultiBlockBase;
 import gtPlusPlus.xmod.gregtech.common.blocks.textures.TexturesGtBlock;
-import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.StatCollector;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.FluidStack;
 
-import java.lang.Math;
-
-public class GT_MetaTileEntity_Bonesaw extends
-        GT_MetaTileEntity_ExtendedPowerMultiBlockBase<GT_MetaTileEntity_Bonesaw> implements ISurvivalConstructable {
+public class GT_MetaTileEntity_Bonesaw extends GT_MetaTileEntity_ExtendedPowerMultiBlockBase<GT_MetaTileEntity_Bonesaw>
+    implements ISurvivalConstructable {
 
     private int mCasing;
     private boolean MACHINE_MODE_PLASMA = false;
@@ -57,8 +55,7 @@ public class GT_MetaTileEntity_Bonesaw extends
 
     private static IStructureDefinition<GT_MetaTileEntity_Bonesaw> STRUCTURE_DEFINITION = null;
 
-    public GT_MetaTileEntity_Bonesaw(final int aID, final String aName,
-                                     final String aNameRegional) {
+    public GT_MetaTileEntity_Bonesaw(final int aID, final String aName, final String aNameRegional) {
         super(aID, aName, aNameRegional);
     }
 
@@ -199,17 +196,16 @@ public class GT_MetaTileEntity_Bonesaw extends
         int hatch_capacity = this.getMaxCapacityOfAFluid(MaterialsUEVplus.Space.getFluid(0L));
         float percent_filled_factor = x_axis_scaling_factor * (float) stored_spatial / hatch_capacity;
 
-
         float fill_parallel_boost;
         if (percent_filled_factor <= 4) {
-            fill_parallel_boost = logisticFunction(a,b1,c,d,percent_filled_factor) ;
-        }
-        else {
-            fill_parallel_boost = logisticFunction(a,b2,c,d,percent_filled_factor);
+            fill_parallel_boost = logisticFunction(a, b1, c, d, percent_filled_factor);
+        } else {
+            fill_parallel_boost = logisticFunction(a, b2, c, d, percent_filled_factor);
         }
         // Multiplier for what tier Input Hatch(es) used for spatially enlarged fluid
         // I'm told spatially enlarged becomes free with T7 eoh so lets just balance it around LuV input hatches for now
-        double hatch_tier_parallel_boost = Math.pow( Math.log(hatch_capacity / 512_000.0d+1) / Math.log(2.0d), 1.0f / 4 );
+        double hatch_tier_parallel_boost = Math
+            .pow(Math.log(hatch_capacity / 512_000.0d + 1) / Math.log(2.0d), 1.0f / 4);
 
         return fill_parallel_boost * hatch_tier_parallel_boost;
     }
@@ -217,7 +213,9 @@ public class GT_MetaTileEntity_Bonesaw extends
     private int getFluidAndDrain(FluidStack fluid) {
         int amount = 0;
         for (GT_MetaTileEntity_Hatch_Input fluid_hatch : this.mInputHatches) {
-            if (fluid_hatch.getFluid().getFluid() == fluid.getFluid() && fluid_hatch.drain(fluid_hatch.getFluidAmount(), false).amount == fluid_hatch.mFluid.amount) {
+            if (fluid_hatch.getFluid()
+                .getFluid() == fluid.getFluid()
+                && fluid_hatch.drain(fluid_hatch.getFluidAmount(), false).amount == fluid_hatch.mFluid.amount) {
                 amount += fluid_hatch.getFluidAmount();
                 this.drainInputHatch(fluid_hatch);
             }
@@ -228,7 +226,8 @@ public class GT_MetaTileEntity_Bonesaw extends
     private int getFluidAmount(FluidStack fluid) {
         int amount = 0;
         for (GT_MetaTileEntity_Hatch_Input fluid_hatch : this.mInputHatches) {
-            if (fluid_hatch.getFluid().getFluid() == fluid.getFluid()) {
+            if (fluid_hatch.getFluid()
+                .getFluid() == fluid.getFluid()) {
                 amount += fluid_hatch.getCapacity();
             }
         }
@@ -242,7 +241,8 @@ public class GT_MetaTileEntity_Bonesaw extends
     private int getMaxCapacityOfAFluid(FluidStack fluid) {
         int hatch_capacity = 0;
         for (GT_MetaTileEntity_Hatch_Input fluid_hatch : this.mInputHatches) {
-            if (fluid_hatch.getFluid().getFluid() == MaterialsUEVplus.Space.mFluid) {
+            if (fluid_hatch.getFluid()
+                .getFluid() == MaterialsUEVplus.Space.mFluid) {
                 int amount = fluid_hatch.getCapacity();
                 hatch_capacity += amount;
             }
@@ -258,19 +258,22 @@ public class GT_MetaTileEntity_Bonesaw extends
         int amount_drained = this.getFluidAndDrain(Materials.Thorium.getPlasma(1));
 
         // allow a 10% margin of error on the optimal plasma consumption
-        if (this.maxProgresstime() != 0 && Math.abs(amount_drained - this.currentPlasmaConsumption) <= 0.1f * this.currentPlasmaConsumption) {
+        if (this.maxProgresstime() != 0
+            && Math.abs(amount_drained - this.currentPlasmaConsumption) <= 0.1f * this.currentPlasmaConsumption) {
             this.currentSpeedBonusDenominator = Math.min(2000f, this.currentSpeedBonusDenominator + 25f);
         }
         // no current recipe or plasma consumed less than 90% of needed
-        else if (this.maxProgresstime() == 0 || (amount_drained - this.currentPlasmaConsumption) < -0.1f * this.currentPlasmaConsumption){
-            this.currentSpeedBonusDenominator = Math.max(350f, this.currentSpeedBonusDenominator - 3.125f);
-        }
+        else if (this.maxProgresstime() == 0
+            || (amount_drained - this.currentPlasmaConsumption) < -0.1f * this.currentPlasmaConsumption) {
+                this.currentSpeedBonusDenominator = Math.max(350f, this.currentSpeedBonusDenominator - 3.125f);
+            }
         // if plasma consumption is over 110% of needed just do nothing, keep it heated just don't increase or decrease
     }
 
     public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTick) {
         if (this.MACHINE_MODE_SPATIAL && aTick % 100 == 0) {
-            this.currentParallels = (int) Math.round(this.getBaseParallelRecipes() * this.spatiallyEnlargedConsumptionFormula());
+            this.currentParallels = (int) Math
+                .round(this.getBaseParallelRecipes() * this.spatiallyEnlargedConsumptionFormula());
         }
         if (this.MACHINE_MODE_PLASMA && aTick % 10 == 0) {
             this.doPlasmaConsumption();
@@ -279,7 +282,8 @@ public class GT_MetaTileEntity_Bonesaw extends
     }
 
     @Override
-    public ITexture[] getTexture(IGregTechTileEntity baseMetaTileEntity, ForgeDirection side, ForgeDirection facing, int colorIndex, boolean active, boolean redstoneLevel) {
+    public ITexture[] getTexture(IGregTechTileEntity baseMetaTileEntity, ForgeDirection side, ForgeDirection facing,
+        int colorIndex, boolean active, boolean redstoneLevel) {
         return new ITexture[0];
     }
 
@@ -354,31 +358,32 @@ public class GT_MetaTileEntity_Bonesaw extends
         return StatCollector.translateToLocal("GT5U.GTPP_MULTI_ADV_CUTTING_MACHINE");
     }
 
-//    @Override
-//    public void loadNBTData(NBTTagCompound aNBT) {
-//        // Migrates old NBT tag to the new one
-//        if (aNBT.hasKey("mCuttingMode")) {
-//            machineMode = aNBT.getBoolean("mCuttingMode") ? MACHINEMODE_CUTTER : MACHINEMODE_SLICER;
-//        }
-//        super.loadNBTData(aNBT);
-//    }
+    // @Override
+    // public void loadNBTData(NBTTagCompound aNBT) {
+    // // Migrates old NBT tag to the new one
+    // if (aNBT.hasKey("mCuttingMode")) {
+    // machineMode = aNBT.getBoolean("mCuttingMode") ? MACHINEMODE_CUTTER : MACHINEMODE_SLICER;
+    // }
+    // super.loadNBTData(aNBT);
+    // }
 
-//    @Override
-//    public void getWailaNBTData(EntityPlayerMP player, TileEntity tile, NBTTagCompound tag, World world, int x, int y,
-//        int z) {
-//        super.getWailaNBTData(player, tile, tag, world, x, y, z);
-//        tag.setInteger("mode", machineMode);
-//    }
-//
-//    @Override
-//    public void getWailaBody(ItemStack itemStack, List<String> currentTip, IWailaDataAccessor accessor,
-//        IWailaConfigHandler config) {
-//        super.getWailaBody(itemStack, currentTip, accessor, config);
-//        final NBTTagCompound tag = accessor.getNBTData();
-//        currentTip.add(
-//            StatCollector.translateToLocal("GT5U.machines.oreprocessor1") + " "
-//                + EnumChatFormatting.WHITE
-//                + StatCollector.translateToLocal("GT5U.GTPP_MULTI_CUTTING_MACHINE.mode." + tag.getInteger("mode"))
-//                + EnumChatFormatting.RESET);
-//    }
+    // @Override
+    // public void getWailaNBTData(EntityPlayerMP player, TileEntity tile, NBTTagCompound tag, World world, int x, int
+    // y,
+    // int z) {
+    // super.getWailaNBTData(player, tile, tag, world, x, y, z);
+    // tag.setInteger("mode", machineMode);
+    // }
+    //
+    // @Override
+    // public void getWailaBody(ItemStack itemStack, List<String> currentTip, IWailaDataAccessor accessor,
+    // IWailaConfigHandler config) {
+    // super.getWailaBody(itemStack, currentTip, accessor, config);
+    // final NBTTagCompound tag = accessor.getNBTData();
+    // currentTip.add(
+    // StatCollector.translateToLocal("GT5U.machines.oreprocessor1") + " "
+    // + EnumChatFormatting.WHITE
+    // + StatCollector.translateToLocal("GT5U.GTPP_MULTI_CUTTING_MACHINE.mode." + tag.getInteger("mode"))
+    // + EnumChatFormatting.RESET);
+    // }
 }
