@@ -20,9 +20,11 @@ import gregtech.api.enums.MaterialsUEVplus;
 import gregtech.api.enums.TAE;
 import gregtech.api.gui.modularui.GT_UITextures;
 import gregtech.api.interfaces.IIconContainer;
+import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.logic.ProcessingLogic;
+import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_ExtendedPowerMultiBlockBase;
 import gregtech.api.metatileentity.implementations.GT_MetaTileEntity_Hatch_Input;
 import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMaps;
@@ -44,7 +46,7 @@ import net.minecraftforge.fluids.FluidStack;
 import java.lang.Math;
 
 public class GT_MetaTileEntity_Bonesaw extends
-    GregtechMeta_MultiBlockBase<GT_MetaTileEntity_Bonesaw> implements ISurvivalConstructable {
+        GT_MetaTileEntity_ExtendedPowerMultiBlockBase<GT_MetaTileEntity_Bonesaw> implements ISurvivalConstructable {
 
     private int mCasing;
     private boolean MACHINE_MODE_PLASMA = false;
@@ -133,7 +135,7 @@ public class GT_MetaTileEntity_Bonesaw extends
     @Override
     public boolean checkMachine(IGregTechTileEntity aBaseMetaTileEntity, ItemStack aStack) {
         mCasing = 0;
-        return checkPiece(mName, 1, 1, 0) && mCasing >= 14 && checkHatch();
+        return checkPiece(mName, 1, 1, 0) && mCasing >= 14;
     }
 
     @Override
@@ -276,6 +278,16 @@ public class GT_MetaTileEntity_Bonesaw extends
         super.onPostTick(aBaseMetaTileEntity, aTick);
     }
 
+    @Override
+    public ITexture[] getTexture(IGregTechTileEntity baseMetaTileEntity, ForgeDirection side, ForgeDirection facing, int colorIndex, boolean active, boolean redstoneLevel) {
+        return new ITexture[0];
+    }
+
+    @Override
+    public boolean isCorrectMachinePart(ItemStack aStack) {
+        return false;
+    }
+
     public float logisticFunction(float a, float b, float c, float d, float x) {
         return (float) (a / (1 + Math.exp(-1 * b * (x - c))) + d);
     }
@@ -288,6 +300,11 @@ public class GT_MetaTileEntity_Bonesaw extends
     @Override
     public int getPollutionPerSecond(final ItemStack aStack) {
         return CORE.ConfigSwitches.pollutionPerSecondMultiIndustrialCuttingMachine;
+    }
+
+    @Override
+    public int getDamageToComponent(ItemStack aStack) {
+        return 0;
     }
 
     @Override
